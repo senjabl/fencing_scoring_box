@@ -1,5 +1,5 @@
 # fencing_scoring_box
-Fencing Scoring Box
+##Fencing Scoring Box
 
 On this place I will try to maintain code changes and other files for my version of fencing scoring box.
 
