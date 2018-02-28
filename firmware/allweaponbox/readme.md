@@ -1,0 +1,3 @@
+I am using Atom.io + Platform.io for developing, so folder structure is little bit changed...
+
+Arduino file is in /src folder
