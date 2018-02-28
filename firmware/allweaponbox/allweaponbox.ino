@@ -18,34 +18,40 @@
 // #defines
 //============
 //TODO: set up debug levels correctly
+
+#include "Arduino.h"
+
 #define DEBUG 0
-//#define TEST_LIGHTS       // turns on lights for a second on start up
+#define TEST_LIGHTS       // turns on lights for a second on start up
 //#define TEST_ADC_SPEED    // used to test sample rate of ADCs
 //#define REPORT_TIMING     // prints timings over serial interface
-#define BUZZERTIME  1000  // length of time the buzzer is kept on after a hit (ms)
+#define BUZZERTIME  2000  // length of time the buzzer is kept on after a hit (ms)
 #define LIGHTTIME   3000  // length of time the lights are kept on after a hit (ms)
 #define BAUDRATE   57600  // baudrate of the serial debug interface
+
+
+
 
 //============
 // Pin Setup
 //============
-const uint8_t shortLEDA  =  8;    // Short Circuit A Light
-const uint8_t onTargetA  =  9;    // On Target A Light
-const uint8_t offTargetA = 10;    // Off Target A Light
-const uint8_t offTargetB = 11;    // Off Target B Light
-const uint8_t onTargetB  = 12;    // On Target B Light
-const uint8_t shortLEDB  = 13;    // Short Circuit A Light
+const uint8_t shortLEDA  =  8;        // Short Circuit A Light
+const uint8_t onTargetA  =  9;        // On Target A Light
+const uint8_t offTargetA = 10;        // Off Target A Light
+const uint8_t offTargetB = 11;        // Off Target B Light
+const uint8_t onTargetB  = 12;        // On Target B Light
+const uint8_t shortLEDB  = 13;        // Short Circuit A Light
 
-const uint8_t groundPinA = A0;    // Ground A pin - Analog
-const uint8_t weaponPinA = A1;    // Weapon A pin - Analog
-const uint8_t lamePinA   = A2;    // Lame   A pin - Analog (Epee return path)
-const uint8_t lamePinB   = A3;    // Lame   B pin - Analog (Epee return path)
-const uint8_t weaponPinB = A4;    // Weapon B pin - Analog
-const uint8_t groundPinB = A5;    // Ground B pin - Analog
+const uint8_t weaponPinA = A0;        // Weapon A pin
+const uint8_t weaponPinB = A3;        // Weapon B pin
+const uint8_t lamePinA   = A2;        // Lame A pin (Epee return path)
+const uint8_t lamePinB   = A5;        // Lame B pin (Epee return path)
+const uint8_t groundPinA = A1;        // Ground A pin - Analog
+const uint8_t groundPinB = A4;        // Ground B pin - Analog
 
 const uint8_t modePin    =  2;        // Mode change button interrupt pin 0 (digital pin 2)
 const uint8_t buzzerPin  =  3;        // buzzer pin
-const uint8_t modeLeds[] = {4, 5, 6}; // LED pins to indicate weapon mode selected {f e s}
+const uint8_t modeLeds[] = {5, 6, 7}; // LED pins to indicate weapon mode selected {f e s}
 
 //=========================
 // values of analog reads
@@ -108,6 +114,12 @@ bool done = false;
 #endif
 
 
+//=========
+// Startup 
+//=========
+long setupStartTime = 0;
+long setupCurrentTime = 0;
+
 //================
 // Configuration
 //================
@@ -116,7 +128,9 @@ void setup() {
    pinMode(modePin, INPUT_PULLUP);
 
    // add the interrupt to the mode pin (interrupt is pin 0)
-   attachInterrupt(modePin-2, changeMode, FALLING);
+   attachInterrupt(modePin-2, changeMode, FALLING); //Ovo ne radi
+   //attachInterrupt(modePin, changeMode, RISING);
+
    pinMode(modeLeds[0], OUTPUT);
    pinMode(modeLeds[1], OUTPUT);
    pinMode(modeLeds[2], OUTPUT);
@@ -146,6 +160,9 @@ void setup() {
    Serial.println(currentMode);
 
    resetValues();
+
+setMode(); //You have 10secs to adjust mode
+   
 }
 
 
@@ -182,7 +199,7 @@ void loop() {
    // use a while as a main loop as the loop() has too much overhead for fast analogReads
    // we get a 3-4% speed up on the loop this way
    while(1) {
-      checkIfModeChanged();
+      //checkIfModeChanged();
       // read analog pins
       weaponA = analogRead(weaponPinA);
       weaponB = analogRead(weaponPinB);
@@ -215,16 +232,18 @@ void loop() {
 // Mode pin interrupt
 //=====================
 void changeMode() {
-   // set a flag to keep the time in the ISR to a min
-   modeJustChangedFlag = true;
+	   // set a flag to keep the time in the ISR to a min
+  modeJustChangedFlag = true;
 }
+
+
 
 
 //============================
 // Sets the correct mode led
 //============================
 void setModeLeds() {
-   if (currentMode == FOIL_MODE) {
+/*   if (currentMode == FOIL_MODE) {
       digitalWrite(onTargetA, HIGH);
    } else {
       if (currentMode == EPEE_MODE) {
@@ -239,6 +258,17 @@ void setModeLeds() {
    delay(500);
    digitalWrite(onTargetA, LOW);
    digitalWrite(onTargetB, LOW);
+   */
+
+   /*for (uint8_t i = 0; i < 3; i++) {
+      digitalWrite(modeLeds[i], LOW);
+   } */
+   digitalWrite(modeLeds[0], LOW);
+   digitalWrite(modeLeds[1], LOW);
+   digitalWrite(modeLeds[2], LOW);
+   digitalWrite(modeLeds[currentMode], HIGH);
+
+   
 }
 
 
@@ -247,8 +277,8 @@ void setModeLeds() {
 //========================
 void checkIfModeChanged() {
  if (modeJustChangedFlag) {
-      if (digitalRead(modePin)) {
-         if (currentMode == 2)
+     if (digitalRead(modePin)) {
+        if (currentMode == 2)
             currentMode = 0;
          else
             currentMode++;
@@ -508,3 +538,31 @@ void testLights() {
    delay(1000);
    resetValues();
 }
+
+void setMode(){
+  setupStartTime = millis();
+  
+  while ((millis()-setupStartTime)<10000)  {
+  checkIfModeChanged();
+  Serial.println((millis()-setupStartTime));
+
+  }
+   for (int i=0; i <= 5; i++) {
+    digitalWrite(offTargetA, HIGH);
+    delay(100);
+    digitalWrite(offTargetA, LOW);
+    digitalWrite(offTargetB, HIGH);
+     delay(100);
+     digitalWrite(offTargetB, LOW);
+   //resetValues();
+   }
+      digitalWrite(buzzerPin, HIGH);
+      delay(50);
+      digitalWrite(buzzerPin, LOW);
+      delay(100);
+      digitalWrite(buzzerPin, HIGH);
+      delay(50);
+      digitalWrite(buzzerPin, LOW);
+  
+}
+
