@@ -17,7 +17,7 @@
 #define IR_RESET_CARDS 0xFF18E7 //Code for "Reset all cards" button [2]
 #define IR_ADVANTAGE 0xFF9867 //Code for "ADVANTAGE"button [100+]
 #define IR_SETTINGS 0xFF10EF // Code for "Enter SETTINGS" button [4]
-#define IR_SAVE_AUTO_MAN 0xFF42BD //Code for "Save SETTINGS or AUTO/MANUAL mode" button [7]
+#define IR_RUN_MODE 0xFF42BD //Code for "Run MODE" button [7]
 #define IR_MINUTES_PLUS 0xFF38C7 //Code for "MINUTES +" button --> Duration of match in settings [5]
 #define IR_MINUTES_MINUS 0xFF4AB5 //Code for "MINUTES -" button --> Duration of match in settings [8]
 #define IR_POINTS_PLUS 0xFF5AA5 //Code for "POINTS +" button --> Maximum number of points in match [6]
