@@ -284,7 +284,9 @@ hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + di
 
 		case IR_L_TOUCH_MINUS: {
 			if (setupMachine == true){
+				if (leftPoints>0){
 					leftPoints--;
+				}
 				startMaxPoints = leftPoints;
 			}
 
