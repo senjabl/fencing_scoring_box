@@ -3,7 +3,7 @@
 
 #pragma once
 
-const uint8_t PROGMEM enhanced_led_board[] = 
+const uint8_t PROGMEM enhanced_led_board[] =
 {
 	0,	// 0
 	0,	// 1
@@ -147,10 +147,8 @@ const uint8_t PROGMEM enhanced_led_board[] =
 	3,240,80,240,	// 139 - 'Small A'
 	16,64,72,56,248,112,16,16,8,8,4,4,4,2,2,2,1,	// 140 - 'left epee'
 	16,1,2,2,2,4,4,4,8,8,16,16,112,248,56,72,64,	// 141 - 'right epee'
-	0,	// 140
-	0,	// 141
-	0,	// 142
-	0,	// 143
+	3,16,240,16,	// 142 - 'Small T'
+	3,184,168,232,	// 143 - 'small S'
 	0,	// 144
 	0,	// 145
 	0,	// 146
