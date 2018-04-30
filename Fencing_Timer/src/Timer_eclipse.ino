@@ -60,6 +60,7 @@ bool justRearmed = true;
 bool timeOut = false;
 bool setupMachine = false;
 bool maxScoreReached = false;
+bool doNotStopTimer = false;
 
 //Setup of timer default values
 int startMinutes = 3;
@@ -148,9 +149,11 @@ if (timerRunning == true ) {
 hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + digitalRead(RIGHT_HIT_PIN)*4 + digitalRead(RIGHT_FALSE_HIT_PIN)*8 ;
 //Serial.println (hitState);
    if (hitState > 0) {
+		 if (doNotStopTimer == false) {
 
 									timer.disable();
 									timerRunning = false;
+								}
 
 																switch (hitState) {
 																case 1:
@@ -240,6 +243,21 @@ hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + di
 				displayUpdate();
 
 			}
+			break;
+		}
+
+		case IR_RUN_MODE: {
+			if (timerRunning == false && setupMachine == false) {
+				if (doNotStopTimer == false) {
+					doNotStopTimer = true;
+					clockSuffix = "\x08b";
+				}
+				else {
+					doNotStopTimer = false;
+					clockSuffix = "";
+				}
+			}
+
 			break;
 		}
 
