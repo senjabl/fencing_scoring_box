@@ -8,7 +8,11 @@
 #include "TimerOne.h"
 #include "TimedAction.h"
 //#include "String.h"
-#define IR_CARMP3 // Define our remote
+#define BTserial Serial3
+
+// Define our remote-select one
+//#define IR_CARMP3
+#define BT_REMOTE
 
 #define LEFT_HIT_PIN 40 //Define pin to sense left opponent hit
 #define LEFT_FALSE_HIT_PIN 42 //Define pin to sense left opponent  false hit
@@ -29,8 +33,17 @@
 #define MAX_TIME 150 // max ms between codes for IR debouncing
 long lastPressTime = 0; //for IR receiver debouncing
 
+#ifndef IR_CARMP3
 IRrecv irrecv(IR_RCV_PIN); //Define IR receiver
-decode_results IRresult; //Variable for keeping results of IR receiver
+//decode_results IRresult; //Variable for keeping results of IR receiver
+#endif
+String BTcommand;
+
+//#ifndef BT_REMOTE
+int IRresult;
+char command;
+
+//#endif
 
 // Hardware SPI connection
 MD_Parola P = MD_Parola(CS_PIN, MAX_DEVICES);
@@ -88,9 +101,21 @@ void setup() {
 	pinMode(RIGHT_HIT_PIN, INPUT);
 	pinMode(RIGHT_FALSE_HIT_PIN, INPUT);
 	pinMode(LOCK_HIT_PIN, OUTPUT);
+
+//If we have IR REMOTE
+/*#ifndef IR_CARMP3
 	Serial.begin(9600);
 	irrecv.enableIRIn(); // Start the IR receiver
-	//Serial.begin(57600);
+	#endif
+	*/
+
+	//#ifndef BT_REMOTE
+	BTserial.begin(19200);
+	//#endif
+	Serial.begin(9600);
+	Serial.println("BTcommand");
+
+
 	minutes = startMinutes;
 	seconds = startSeconds;
 	period = startPeriods;
@@ -198,10 +223,38 @@ hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + di
 }
 
 
-//clockUpdate();
+
+/*#ifndef IR_CARMP3
 	if (irrecv.decode(&IRresult)) {
 		//Serial.println(IRresult.value, HEX);
-		switch (IRresult.value) {
+		#endif
+*/
+//#ifndef BT_REMOTE
+if (BTserial.available() > 0) {
+	BTcommand = "";
+	//IRresult=0;
+}
+
+while(BTserial.available() > 0)
+{command = (BTserial.read());
+
+if(command == ':')
+{
+
+	IRresult = BTcommand.toInt();
+	Serial.println(IRresult);
+	BTcommand = "";
+	break;
+}
+else
+{
+	BTcommand += command;
+}
+ delay(1);
+}
+//#endif
+
+		switch (IRresult) {
 
 		//Start/Stop/Pause pressed
 		case IR_START_STOP: //Start/Stop/Pause pressed
@@ -293,9 +346,9 @@ hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + di
 
 			else if (timerRunning == false) {
 				increaseLeftScore();
-
+				displayUpdate();
 			}
-			displayUpdate();
+
 
 			break;
 		}
@@ -336,8 +389,8 @@ hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + di
 		default:
 			break;
 
-		}
-		irrecv.resume(); // Receive the next value
+	//	}
+	//	irrecv.resume(); // Receive the next value
 
 	}
 
@@ -350,6 +403,7 @@ hitState= digitalRead(LEFT_HIT_PIN)*1 + digitalRead(LEFT_FALSE_HIT_PIN) * 2 + di
 	//blinkClock();
 	//while (!P.getZoneStatus(2))
 	//P.displayAnimate();
+IRresult=0;
 	displayUpdate();
 	timer.check();
 }
@@ -518,8 +572,12 @@ void increaseLeftScore() {
 }
 }
 
+
 void decreaseLeftScore() {
 	if (leftPoints > 0) {
+		if (leftPoints==startMaxPoints){
+		maxScoreReached =false;
+	}
 		leftPoints--;
 
 		}
@@ -535,8 +593,12 @@ void increaseRightScore() {
 	}
 }
 
+
 void decreaseRightScore() {
 	if (rightPoints > 0) {
+		if (rightPoints==startMaxPoints){
+			maxScoreReached =false;
+		}
 		rightPoints--;
 	}
 }
