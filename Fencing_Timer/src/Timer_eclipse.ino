@@ -1,11 +1,11 @@
 #include "Arduino.h"
-#include "IRremote.h"
+//#include "IRremote.h"
 #include "SPI.h"
 #include "MD_MAX72xx.h"
 #include "MD_Parola.h"
 #include "RemoteDefinition.h"
 #include "enhanced_led_board.h"
-#include "TimerOne.h"
+//#include "TimerOne.h"
 #include "TimedAction.h"
 //#include "String.h"
 #define BTserial Serial3
@@ -29,14 +29,15 @@
 #define	DATA_PIN	51  // or MOSI  LED matrix - Mega 2560
 #define	CS_PIN		53  // or SS  LED matrix -  Mega 2560
 
-#define IR_RCV_PIN 11 //Define input pin for IR receiver - Mega 2560
+//#define IR_RCV_PIN 11 //Define input pin for IR receiver - Mega 2560
 #define MAX_TIME 150 // max ms between codes for IR debouncing
 long lastPressTime = 0; //for IR receiver debouncing
+#define BEEPER_PIN 8 //beeper pin
 
-#ifndef IR_CARMP3
-IRrecv irrecv(IR_RCV_PIN); //Define IR receiver
+//#ifndef IR_CARMP3
+//IRrecv irrecv(IR_RCV_PIN); //Define IR receiver
 //decode_results IRresult; //Variable for keeping results of IR receiver
-#endif
+//#endif
 String BTcommand;
 
 //#ifndef BT_REMOTE
@@ -51,15 +52,17 @@ MD_Parola P = MD_Parola(CS_PIN, MAX_DEVICES);
 #define	SPEED_TIME	0
 #define	PAUSE_TIME	0
 
-String minsTens, minsUnits, secsTens, secsUnits;
+String minsTens, minsUnits, secsTens, secsUnits , centSecsTens, centSecsUnits;
 String scoreLeft, scoreRight;
-int mins10, mins1, secs10, secs1;
-int minutes, seconds;
+int mins10, mins1, secs10, secs1, centSecs10, centSecs1;
+int minutes, seconds, centSeconds;
 int clockRunning = 0;
+char centsecs[6];
 char secs[6];
 char mins[6];
 char scoreL[6];
 char scoreR[6];
+String centsec;
 String strsec;
 String strmin;
 String strScoreLeft;
@@ -74,17 +77,20 @@ bool timeOut = false;
 bool setupMachine = false;
 bool maxScoreReached = false;
 bool doNotStopTimer = false;
+bool runWithPeriods = false;
 
 //Setup of timer default values
 int startMinutes = 3;
 int startSeconds = 0;
-int startPeriods = 1;
+int startCentSeconds = 0;
+int maxPeriods = 1;
 int startMaxPoints = 5;
 int startPoints = 0;
 int leftPoints = startPoints;
 int rightPoints = startPoints;
+//int startPeriods;
 
-int period;
+int period=1;
 
 void clockUpdate();
 
@@ -101,6 +107,7 @@ void setup() {
 	pinMode(RIGHT_HIT_PIN, INPUT);
 	pinMode(RIGHT_FALSE_HIT_PIN, INPUT);
 	pinMode(LOCK_HIT_PIN, OUTPUT);
+	pinMode(BEEPER_PIN, OUTPUT);
 
 //If we have IR REMOTE
 /*#ifndef IR_CARMP3
@@ -118,8 +125,8 @@ void setup() {
 
 	minutes = startMinutes;
 	seconds = startSeconds;
-	period = startPeriods;
-	Timer1.initialize(4000);
+	//period = startPeriods;
+	//Timer1.initialize(4000);
 	//Timer1.attachInterrupt( clockUpdate);
 
 	//Definition of display zones
@@ -269,6 +276,7 @@ else
 				timer.disable();
 				timerRunning = false;
 			}
+			shortBeep();
 			break;
 			//*************************************
 
@@ -280,6 +288,7 @@ else
 				rearmMachine();
 			}
 		}
+		shortBeep();
 			break;
 			//*************************************************
 
@@ -288,6 +297,7 @@ else
 			if (timerRunning == false && justRearmed == true
 					&& setupMachine == false) {
 				setupMachine = true;
+				shortBeep();
 				clockSuffix = "=";
 				displayUpdate();
 			} else if (setupMachine == true) {
@@ -296,6 +306,7 @@ else
 				displayUpdate();
 
 			}
+
 			break;
 		}
 
@@ -310,7 +321,7 @@ else
 					clockSuffix = "";
 				}
 			}
-
+shortBeep();
 			break;
 		}
 
@@ -433,6 +444,8 @@ void blinkClock() {
 		P.setIntensity(1, 0);
 		P.setIntensity(2, 0);
 
+		//tone(BEEPER_PIN,131,500);
+
 		delay(100);
 		P.setIntensity(1, 10);
 		P.setIntensity(2, 10);
@@ -502,6 +515,7 @@ void clockUpdate() {
 	displayUpdate();
 
 	if (minutes == 0 && seconds == 0) {
+		tone(BEEPER_PIN,87,2000);
 		blinkClock();
 		timerRunning = false;
 		timeOut = true;
@@ -632,4 +646,8 @@ while (!P.getZoneStatus(3))
 	 P.displayZoneText(0, scoreR, PA_LEFT, 0, 0, PA_PRINT, PA_NO_EFFECT);
  while (!P.getZoneStatus(0))
 	 P.displayAnimate();
+}
+
+void shortBeep(){
+	tone(BEEPER_PIN,44,50);
 }
